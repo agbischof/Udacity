@@ -1,0 +1,201 @@
+Problem Set 3
+========================================================
+  
+***
+  
+### Load ggplot library and diamonds data set
+
+```{r}
+library(ggplot2)
+data(diamonds)
+names(diamonds)
+str(diamonds)
+diamonds$color
+```
+
+
+***
+  
+### Histogram of price of all the diamonds
+```{r Pseudo-Facebook User Data}
+qplot(price, data = diamonds, binwidth = 100)
+```
+
+
+### Summary of diamond price
+```{r}
+summary(diamonds$price)
+
+sum(diam500$price < 500)
+
+sum(diamonds$price < 250)
+
+sum(diamonds$price >= 15000)
+```
+
+### Histogram of price of lowest peak of the diamonds
+```{r Pseudo-Facebook User Data}
+qplot(price, data = diamonds, binwidth = 10) + 
+  scale_x_continuous(limits = c(300,1500), breaks = seq(0,6000, 50))
+```
+
+### Break out the histogram of diamond prices by cut
+### end up with 5 histograms in separate panels on the plot
+```{r}
+qplot(price, data = diamonds, binwidth = 100, 
+      xlab = 'Diamond Price ($)', ylab = 'Number of Diamonds') +
+  scale_x_continuous(breaks = seq(0,150000, 5000)) + 
+  facet_wrap(~cut, ncol = 1)
+
+by(diamonds$price, diamonds$cut, summary)
+by(diamonds$price, diamonds$cut, max)
+by(diamonds$price, diamonds$cut, min)
+by(diamonds$price, diamonds$cut, median)
+
+tapply(diamonds$price, diamonds$cut, summary)
+```
+
+```{r}
+qplot(price, data = diamonds, binwidth = 200, 
+      xlab = 'Diamond Price ($)', ylab = 'Number of Diamonds') + 
+  scale_x_continuous(limits = c(0,20000), 
+                     breaks = seq(0,150000, 5000)) +   
+  facet_wrap(~cut, ncol = 1, scales = 'free_y')
+```
+
+### Diamond Price/Carat
+```{r}
+qplot(price/carat, data = diamonds, binwidth = 200, 
+      xlab = 'Diamond Price($)/Carat', ylab = 'Number of Diamonds') + 
+  scale_x_log10() +   
+  facet_wrap(~cut, ncol = 1, scales = 'free_y')
+
+qplot(price/carat, data = diamonds, binwidth = 0.02,
+      color = I('black'), fill = I('#5760AB'),
+      xlab = 'Diamond Price/Carat', ylab = 'Number of Diamonds') + 
+  scale_x_log10() +
+  facet_wrap(~cut, ncol = 1, scales = 'free_y')
+```
+
+
+### Investigate the price of diamonds using box plots, numerical summaries and the following categorical variables: cut, clarity, and color
+#by Cut, clarity and color
+```{r}
+qplot(x = cut, y = price, 
+      data = diamonds, 
+      geom = 'boxplot')+
+  coord_cartesian()
+
+qplot(x = cut, y = price, 
+      data = diamonds, 
+      geom = 'boxplot')+
+  coord_cartesian(ylim = c(0,7000))
+
+tapply(diamonds$price, diamonds$cut, summary)
+
+qplot(x = clarity, y = price, 
+      data = diamonds, 
+      geom = 'boxplot') + 
+  coord_cartesian()
+
+qplot(x = clarity, y = price, 
+      data = diamonds, 
+      geom = 'boxplot')+
+  coord_cartesian(ylim = c(0,7000))
+
+tapply(diamonds$price, diamonds$clarity, summary)
+
+qplot(x = color, y = price, 
+      data = diamonds, 
+      geom = 'boxplot') +
+  coord_cartesian()
+
+qplot(x = color, y = price, 
+      data = diamonds, 
+      geom = 'boxplot')+
+  coord_cartesian(ylim = c(0,8000))
+
+by(diamonds$price, diamonds$color, summary)
+
+IQR(subset(diamonds, color == 'D')$price)
+IQR(subset(diamonds, color == 'J')$price)
+
+qplot(x = color, y = price/carat, 
+      data = diamonds, 
+      geom = 'boxplot') +
+  coord_cartesian()
+
+qplot(x = color, y = price/carat, 
+      data = diamonds, 
+      geom = 'boxplot') +
+  coord_cartesian(ylim = c(0,6000))
+
+qplot(x = color, y = price/carat, 
+      data = diamonds, 
+      geom = 'boxplot') +
+  coord_cartesian() +
+  facet_wrap(~clarity)
+
+qplot(x = color, y = price/carat, 
+      data = diamonds, 
+      geom = 'boxplot') +
+  coord_cartesian() +
+  facet_wrap(~cut)
+```
+
+
+###Investiage carat using frequency polygons
+```{r}
+qplot(x = carat, 
+      data = diamonds, 
+      xlab = 'Carat',
+      ylab = 'Number of Diamonds',
+      binwidth = 0.01, geom = 'freqpoly') +
+  scale_x_continuous(limits = c(0, 2), breaks = seq(0, 1, 0.1)) 
+
+qplot(x = carat, 
+      data = diamonds, 
+      xlab = 'Carat',
+      ylab = 'Number of Diamonds',
+      binwidth = 0.01, geom = 'freqpoly', color = color) +
+  scale_x_continuous(limits = c(0,1)) 
+```
+
+###Investigate breast cancer data from Gapminder
+```{r}
+library(scales)
+library(reshape2)
+
+BC = read.csv('BreastCancerMortaility.csv', na.strings='NA', header=T, row.names=1, blank.lines.skip=T)
+#transpose
+BCt = data.frame(t(BC))
+
+BC$country = rownames(BC)
+###BCy = data.frame(year=c(1950:2002), BC)
+
+qplot(BCy$year, BCy$Australia)
+
+
+HSpend = read.csv('HealthSpending.csv', na.strings='NA', header=T, row.names=1, blank.lines.skip=T)
+HSpend$country = rownames(HSpend)
+
+HSpendt = data.frame(t(HSpend))
+
+BC02 = BC[,'X2002']
+header(BC02) = 'BC'
+HS02 = HSpend[,'X2002']
+row.names(HS02) = 'HS'
+
+
+qplot(x = X2002, data = HSpend, binwidth = 20)
+summary(HSpend$X2002)
+
+qplot(x = X2002, data = BC, binwidth = 0.5)
+
+BCandHS = merge(BC[,c('X2002', 'country')], HSpend[,c('X2002', 'country')], by='country')
+
+qplot(BCandHS$X2002.y)
+```
+
+
+***
