@@ -4,67 +4,110 @@ Lesson 4
 ***
 
 ### Scatterplots and Perceived Audience Size
-Notes:
+Notes: In order to observe how audience size varies with differnt features of the person we will use scatterplots
 
 ***
 
 ### Scatterplots
-Notes:
+Notes: Scatterplots let you look at the relationships of 2 variables on one plot
 
 ```{r Scatterplots}
+getwd()
+setwd('/Users/abischof/code/Udacity/Exploratory Data Analysis/lesson4')
+
+library(ggplot2)
+pf = read.csv('pseudo_facebook.tsv', sep = '\t')
+
+qplot(x = age, y = friend_count, data = pf)
+###or
+qplot(age, friend_count, data = pf)
 
 ```
 
 ***
 
 #### What are some things that you notice right away?
-Response:
+Response: Young people tend to have a lot more friends with the exception of a few key lines in later adults (69, and arround 100). Thesea are likely faked ages
 
 ***
 
 ### ggplot Syntax
-Notes:
+Notes: you have to specify the type of plot look back to instructor notes to see the plot types available. Scatterplot is geom_point. 
+
+aes - asthetic wrapper
+
+change the x axis outside the ggplot call with xlim
+and add alpha to change the transparency of the data in order to see the overlapping data more clearly
 
 ```{r ggplot Syntax}
+qplot(x = age, y = friend_count, data = pf)
 
+ggplot(aes(x = age, y = friend_count), data = pf) +
+  geom_point() + 
+  xlim(13, 90)
+
+summary(pf$age)
 ```
 
 ***
 
 ### Overplotting
-Notes:
+Notes: Refers to having too many overlapping poings so that you cannot clearly see the data. This can be addressed in part by changing the transparency (alpha) and adding jitter in order to disperse the points a bit
 
 ```{r Overplotting}
+ggplot(aes(x = age, y = friend_count), data = pf) +
+  geom_jitter(alpha = 1/20) + 
+  xlim(13, 90)
 
 ```
 
 #### What do you notice in the plot?
 Response:
-
+At young ages the distibution approximates a normal with a long upper tail along with a signifcant spike at ~69. Most of young users actually have less than 1000 friends as opposed to what originally seemed to be much higher
 ***
 
 ### Coord_trans()
-Notes:
+Notes:read coord_trans info
 
 ```{r Coord_trans()}
-
+ggplot(aes(x = age, y = friend_count), data = pf) +
+  geom_point(alpha = 1/20) + 
+  xlim(13, 90) +
+  coord_trans(y = 'sqrt')
 ```
 
 #### Look up the documentation for coord_trans() and add a layer to the plot that transforms friend_count using the square root function. Create your plot!
 
 ```{r}
-
+ggplot(aes(x = age, y = friend_count), data = pf) +
+  geom_point(alpha = 1/20) + 
+  xlim(13, 90) +
+  coord_trans(y = 'sqrt')
 ```
 
 #### What do you notice?
-
+There are very few points above 2000
 ***
 
 ### Alpha and Jitter
-Notes:
+Notes: You have to be careful to only jitter ages. If you add noise to zero friend counts the sqrt is imaginary
 
 ```{r Alpha and Jitter}
+ggplot(aes(x = age, y = friend_count), data = pf) +
+  geom_point(alpha = 1/20, position = position_jitter(h=0)) + 
+  xlim(13, 90) +
+  coord_trans(y = 'sqrt')
+```
 
+***
+### Alpha and Jitter
+Explore the relationship between friends initiated vs age
+
+```{r Alpha and Jitter}
+ggplot(aes(x = age, y = friendships_initiated), data = pf) + 
+  xlim(13,90) +
+  geom_point(alpha = 1/20, position = position_jitter(h=0)) + 
+  coord_trans(y = 'sqrt')
 ```
 
 ***
@@ -75,10 +118,11 @@ Notes:
 ***
 
 ### Conditional Means
-Notes:
+Notes: Need to install package!!! Start here 
 
 ```{r Conditional Means}
-
+install.packages('dplyr')
+library(dplyr)
 ```
 
 Create your plot!

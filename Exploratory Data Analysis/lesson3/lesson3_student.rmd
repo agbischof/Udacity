@@ -7,7 +7,7 @@ Lesson 3
 Notes:
 #make sure you are in the right directory
 getwd()
-setwd('/Users/agibbs/code/Udacity/Exploratory Data Analysis/lesson3')
+setwd('/Users/abischof/code/Udacity/Exploratory Data Analysis/lesson3')
 list.files()
 
 ***
