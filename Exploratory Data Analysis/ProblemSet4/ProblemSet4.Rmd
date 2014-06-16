@@ -1,0 +1,212 @@
+Exploratory Data Analysis: Problem Set 4
+========================================================
+
+
+```{r}
+setwd('/Users/agibbs/code/Udacity/Exploratory Data Analysis/ProblemSet4/')
+library(ggplot2)
+data(diamonds)
+names(diamonds)
+```
+
+###Create a scatterplot of diamond price versus x
+
+```{r}
+ggplot(aes(x, price), data = diamonds) + 
+  geom_point()
+
+cor.test(diamonds$x, diamonds$price)
+cor.test(diamonds$y, diamonds$price)
+cor.test(diamonds$z, diamonds$price)
+```
+
+#create a simple scatter plot of price vs depth
+
+```{r}
+ggplot(aes(depth, price), data = diamonds) +
+  geom_point(alpha = 1/100) + 
+  scale_x_continuous(breaks = seq(43, 79, 2))
+
+range(diamonds$depth)
+
+cor.test(diamonds$depth, diamonds$price)
+```
+
+#create a simple scatter plot of price vs depth
+
+```{r}
+ggplot(aes(carat, price), data = diamonds) +
+  geom_point() +
+  xlim(0, quantile(diamonds$carat, 0.99)) +
+  ylim(0, quantile(diamonds$price, 0.99))
+```
+
+#Create a scatterplot of price vs volume (x*y*z)
+```{r}
+diamonds$volume = diamonds$x*diamonds$y*diamonds$z
+
+ggplot(aes(volume, price), data = diamonds) + 
+  geom_point()
+
+subset(diamonds, diamonds$volume>800)
+
+library(plyr); library(dplyr)
+count(diamonds$volume ==0)
+
+detach("package:plyr", unload=TRUE)
+
+Diamonds_less_vol_outliers = subset(diamonds, volume <= 800 & volume >0)
+
+cor.test(Diamonds_less_vol_outliers$volume, Diamonds_less_vol_outliers$price)
+
+ggplot(aes(volume, price), data = Diamonds_less_vol_outliers) + 
+  geom_point(alpha = 1/30) +
+  geom_smooth(method = 'lm', color = 'red')
+
+ggplot(aes(volume, price), data = Diamonds_less_vol_outliers) + 
+  geom_point(alpha = 1/30) +
+  geom_smooth(method = 'lm', color = 'red') +
+  geom_smooth(formula = y ~x^3, color = 'blue') +
+  xlim(0, 300) + 
+  ylim(0,11000)
+
+ggplot(aes(volume, price), data = Diamonds_less_vol_outliers) + 
+  geom_point(alpha = 1/20) +
+  scale_y_sqrt() +
+  geom_smooth(method = 'lm', color = 'red')
+```
+
+###Examine diamonds by clarity more closely
+```{r}
+library(dplyr)
+diamondsByClarity = diamonds %.%
+  group_by(clarity) %.%
+  summarise(mean_price = mean(price),
+            median_price = median(price),
+            min_price = min(price),
+            max_price = max(price),
+            n=n()) %.%
+  arrange(clarity)
+
+```
+
+###Create 2 bar plots on one output image using grid.arrange() showing mean prices by clarity and color
+```{r}
+diamonds_by_clarity <- group_by(diamonds, clarity)
+diamonds_mp_by_clarity <- summarise(diamonds_by_clarity, mean_price = mean(price))
+
+diamonds_by_color <- group_by(diamonds, color)
+diamonds_mp_by_color <- summarise(diamonds_by_color, mean_price = mean(price))
+
+cl = ggplot(diamonds_mp_by_clarity, aes(clarity, mean_price)) + 
+  geom_bar(stat='identity')
+co = ggplot(diamonds_mp_by_color, aes(color, mean_price)) + 
+  geom_bar(stat='identity')
+
+grid.arrange(cl, co, ncol =1)
+
+diamonds_by_cut <- group_by(diamonds, cut)
+diamonds_mp_by_cut <- summarise(diamonds_by_cut, mean_price = mean(price))
+
+cu = ggplot(diamonds_mp_by_cut, aes(cut, mean_price)) + 
+  geom_bar(stat='identity') 
+grid.arrange(cl, co, cu, ncol=1)
+```
+
+###Gapminder Data exploring Breast Cancer Mortality, Incidence and health care spending
+
+```{r}
+#read in data on Breast Cancer Mortality
+BCm = read.csv('BreastCancerMortaility.csv', na.strings='NA', header = T, row.names=1, blank.lines.skip=T)
+
+#read in data on Breast Cancer Incidence
+BCi = read.csv('BreastCancerIncidence.csv', na.strings='NA', header = T, row.names = 1, blank.lines.skip = T)
+
+#read in data on health care spending
+HSpend = read.csv('HealthSpending.csv', na.strings='NA', header=T, row.names=1, blank.lines.skip=T)
+
+#setup column to merge on
+BCm$country = rownames(BCm)
+BCi$country = rownames(BCi)
+HSpend$country = rownames(HSpend)
+
+#merge data sets by country for 2002
+BCmandHS = merge(BCm[,c('country','X2002')], HSpend[,c('country', 'X2002')], by='country')
+
+BCandHS = merge(BCi[,c('country','X2002')], BCmandHS, by='country')
+
+colnames(BCandHS) = c('country','Cancer_Incidence', 'Cancer_Mortality', 'Health_Spending')
+
+#plot Breast Cancer incidence and mortaility vs Health care spending
+inc = ggplot(BCandHS, aes(Health_Spending, Cancer_Incidence)) + 
+  geom_point() + 
+  xlab('Health Care Spending') +
+  ylab('Breast Cancer Incidence')
+mort = ggplot(BCandHS, aes(Health_Spending, Cancer_Mortality)) + 
+  geom_point() + 
+  xlab('Health Care Spending') +
+  ylab('Breast Cancer Mortality')
+grid.arrange(inc, mort)
+
+#test correlation
+cor.test(BCandHS$Health_Spending, BCandHS$Cancer_Incidence)
+cor.test(BCandHS$Health_Spending, BCandHS$Cancer_Mortality)
+
+#log breast cancer incidence data and fit smoothed curve
+ggplot(BCandHS, aes(Health_Spending, Cancer_Incidence)) + 
+  geom_point() + 
+  scale_x_log10() +
+  geom_smooth(method = 'loess', span = 0.5, color = 'blue') + 
+  ylab('Breast Cancer Incidence') + 
+  xlab('Healthcare Spending')
+
+#fit linear model to log10 data
+inc10 = ggplot(BCandHS, aes(Health_Spending, Cancer_Incidence)) + 
+  geom_point() + 
+  scale_x_log10() +
+  geom_smooth(method = 'lm', color = 'blue') + 
+  ylab('Breast Cancer Incidence') + 
+  xlab('Healthcare Spending')
+
+mort10 = ggplot(BCandHS, aes(Health_Spending, Cancer_Mortality)) + 
+  geom_point() +
+  scale_x_log10() + 
+  geom_smooth(method = 'lm', color = 'blue') + 
+  ylab('Breast Cancer Mortality') + 
+  xlab('Healthcare Spending')
+
+grid.arrange(inc10, mort10)
+
+#break down health care spending into levels of spending
+BCandHS$HS = NA
+BCandHS$HS = ifelse(BCandHS$Health_Spending <= 24.21, 'very low', NA)
+BCandHS$HS = ifelse(BCandHS$Health_Spending > 24.21 & BCandHS$Health_Spending <= 105.00, 'low', BCandHS$HS)
+BCandHS$HS = ifelse(BCandHS$Health_Spending > 105.00 & BCandHS$Health_Spending <= 376.10, 'medium', BCandHS$HS)
+BCandHS$HS = ifelse(BCandHS$Health_Spending > 376.10 & BCandHS$Health_Spending <= 1000, 'high', BCandHS$HS)
+BCandHS$HS = ifelse(BCandHS$Health_Spending > 1000, 'high', BCandHS$HS)
+
+hsLevels = c("very low", "low", "medium","high", "very high")
+BCandHS$HS = factor(BCandHS$HS, levels = hsLevels)
+
+BCbyHS = BCandHS %.%
+  group_by(HS) %.%
+  summarise(BCi_mean = mean(Cancer_Incidence), 
+            BCm_mean = mean(Cancer_Mortality), 
+            BCi_median = median(Cancer_Incidence), 
+            BCm_median = median(Cancer_Mortality), 
+            n = n()) %.%
+  arrange(HS)
+
+p1 = ggplot(BCbyHS, aes(HS, BCi_mean)) +
+  geom_bar(stat='identity') + 
+  xlab('Breast Cancer Incidence') + 
+  ylab('Healthcare Spending')
+
+p2 = ggplot(BCbyHS, aes(HS, BCm_mean)) +
+  geom_bar(stat='identity') + 
+  xlab('Breast Cancer Mortality') + 
+  ylab('Healthcare Spending')
+
+grid.arrange(p1, p2)
+```
+

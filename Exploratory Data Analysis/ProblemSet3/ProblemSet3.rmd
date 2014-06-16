@@ -6,7 +6,7 @@ Problem Set 3
 ### Load ggplot library and diamonds data set
 
 ```{r}
-setwd('/Users/abischof/code/Udacity/Exploratory Data Analysis/ProblemSet3/')
+setwd('/Users/agibbs/code/Udacity/Exploratory Data Analysis/ProblemSet3/')
 library(ggplot2)
 data(diamonds)
 names(diamonds)
@@ -162,44 +162,43 @@ qplot(x = carat,
 ```{r}
 BC = read.csv('BreastCancerMortaility.csv', na.strings='NA', header = T, row.names=1, blank.lines.skip=T)
 
-BCt = data.frame(t(BC))
-
-qplot(x = , data = BC)
 qplot(x = X2002, data = BC)
 
-BC$country = rownames(BC)
-
+#read in data on health care spending
 HSpend = read.csv('HealthSpending.csv', na.strings='NA', header=T, row.names=1, blank.lines.skip=T)
+
+#setup column to merge on
+BC$country = rownames(BC)
 HSpend$country = rownames(HSpend)
 
-BCandHS02 = merge(BC[,c('X2002', 'country')], HSpend[,c('X2002', 'country')], by='country')
-
+#merge data sets by country
 BCandHS = merge(BC, HSpend, by='country')
 
-qplot(x = X2002.x, data = BCandHS, binwidth = 20)
-qplot(x = X2002.y, data = BCandHS, binwidth = 20)
+#visualize each dataset for 2002
+qplot(x = X2002.x, data = BCandHS)
+qplot(x = X2002.y, data = BCandHS)
 
+#look at summary of health care spending data set to decide how to split
 summary(BCandHS$X2002.y)
 
+#split healthcare spending for 2002 and create new column with very low, low, high, and very high spending
 BCandHS$HS = NA
-BCandHS$HS = ifelse(BCandHS$X2002.y <= 24.21, 'vl', NA)
+BCandHS$HS = ifelse(BCandHS$X2002.y <= 24.21, 'very low', NA)
+BCandHS$HS = ifelse(BCandHS$X2002.y > 24.21 & BCandHS$X2002.y <= 105.00, 'low', BCandHS$HS)
+BCandHS$HS = ifelse(BCandHS$X2002.y > 105.00 & BCandHS$X2002.y <= 376.10, 'high', BCandHS$HS)
+BCandHS$HS = ifelse(BCandHS$X2002.y > 376.10, 'very high', BCandHS$HS)
 
-BCandHS$HS = ifelse(BCandHS$X2002.y > 24.21 & BCandHS$X2002.y <= 105.00, 'l', BCandHS$HS)
-
-BCandHS$HS = ifelse(BCandHS$X2002.y > 105.00 & BCandHS$X2002.y <= 376.10, 'h', BCandHS$HS)
-
-BCandHS$HS = ifelse(BCandHS$X2002.y > 376.10, 'vh', BCandHS$HS)
-
-
-hsLevels = c("vl", "l", "h", "vh")
-
+#set order of levels for health care spending
+hsLevels = c("very low", "low", "high", "very high")
 BCandHS$HS = factor(BCandHS$HS, levels = hsLevels)
 
+#create histograms of breast cancer mortaility based on levels of health care spending
 qplot(x = X2002.x, data = subset(BCandHS, !is.na(X2002.y)), 
       binwidth = 1) +
   scale_x_continuous() + 
   facet_wrap(~HS)
 
+#create frequency polygons 
 qplot(x = X2002.x, y = ..count../sum(..count..), 
       data = subset(BCandHS, !is.na(X2002.y)), 
       xlab = 'Breast Cancer Mortality',
@@ -207,11 +206,79 @@ qplot(x = X2002.x, y = ..count../sum(..count..),
       binwidth = 4, geom = 'freqpoly', color = HS) +
   scale_x_continuous() 
 
+#create boxplots
 qplot(x = HS, y = X2002.x, 
       data = subset(BCandHS, !is.na(X2002.y)),
       xlab = 'Health Spending',
       ylab = 'Breast Cancer Mortaility',
       geom = 'boxplot')
+```
+
+
+
+###aquire data from my facebook account on friend's birthdays and investigate:
+#how many people share my bday?
+#which month contains the most birthdays?
+#how many birthdays are in each month?
+#which day of the year has the most birthdays?
+#what day of the month has the most birthdays?
+#what days/months of the year have the least bdays?
+
+```{r}
+bdays = read.csv('Bdays.csv', sep = '\t')
+
+library('lubridate')
+
+bdays['Date'] = mdy(bdays[,2])
+bdays['Month'] = month(bdays[,2])
+bdays['Day'] = mday(bdays[,2])
+bdays['DayY'] = yday(bdays[,2])
+
+##find the people who share my birthday
+MyBdayDofY = yday(mdy('03/22/2014'))
+ShareBday = subset(bdays, bdays['DayY'] == MyBdayDofY)
+ShareBday['Name']
+#No one shares my birthday!
+BdayM1 = subset(bdays, bdays['DayY'] == MyBdayDofY-1)
+BdayM1['Name']
+#2 people (Paul and Zsuzsanna) have a birthday the previous day
+
+#determine which month has the most birthdays
+qplot(x = Month, data=bdays) + 
+  scale_x_discrete(breaks = seq(1, 12, 1)) + 
+  xlab('Month') + 
+  ylab('Frequency')
+table(bdays$Month)
+#March has the most birthdays followed by December, November, September, and February
+# May and August tie for the least number of birthdays
+
+# Month:      1  2  3  4  5  6  7  8  9 10 11 12 
+# # of bdays: 18 22 27 18 16 23 17 16 23 19 24 26 
+
+#determine which day of the year has the most birthdays
+qplot(x = DayY, data=bdays, binwidth = 1) + 
+  scale_x_discrete(breaks = seq(100, 150, 5)) + 
+  xlab('Day') + 
+  ylab('Frequency')
+table(bdays$DayY)
+#there is one day with 3 total birthdays and several with 3
+TalyDays = table(bdays$DayY)
+CommonDays = subset(TalyDays, TalyDays>2)
+CommonDays
+#day 348 - 12/14 has the most bdays (4)
+
+qplot(x = Day, data=bdays, binwidth = 1) + 
+  scale_x_discrete(breaks = seq(1,31,1)) + 
+  xlab('Day of the Month') + 
+  ylab('Frequency')
+table(bdays$Day)
+#the most birthdays fall in the middle of the month on the 14th the 31st, 24th, 3rd, and 6th tie for the least. This is a little surprising since only half of the months have a 31st day
+
+qplot(x = DayY, data=bdays, binwidth = 1) + 
+  scale_x_continuous(limits = c(114, 130), breaks = seq(100, 150, 5)) + 
+  xlab('Day') + 
+  ylab('Frequency')
+#I do not have 365 friends and there are many days which do not have birthdays. The largest gap with no birthdays is from day 115 to 129
 ```
 
 
