@@ -9,6 +9,15 @@ Notes:
 ### Scatterplot Review
 
 ```{r Scatterplot Review}
+library("ggplot2")
+data(diamonds)
+names(diamonds)
+
+# Let's consider the price of a diamond and it's carat weight.
+# Create a scatterplot of price (y) vs carat weight (x).
+ggplot(diamonds, aes(carat, price)) + geom_point(color = "#F79420", alpha = 1/4) +
+  stat_smooth(method = 'lm') + 
+  coord_cartesian(xlim = c(0, quantile(diamonds$carat, 0.99)), ylim = c(0, quantile(diamonds$price, 0.99))) 
 
 ```
 
@@ -67,7 +76,18 @@ Response:
 Notes:
 
 ```{r The Demand of Diamonds}
+library(gridExtra)
 
+plot1 = ggplot(diamonds, aes(price)) + 
+  geom_histogram(bin = 10) + 
+  xlab('Price')
+
+plot2 = ggplot(diamonds, aes(price)) + 
+  geom_histogram(bin = .005) + 
+  scale_x_log10() + 
+  xlab('Price (log10)')
+
+grid.arrange(plot1, plot2)
 ```
 
 ***
@@ -80,6 +100,9 @@ Notes:
 ### Scatterplot Transformation
 
 ```{r Scatterplot Transformation}
+qplot(carat, price, data = diamonds) + 
+  scale_y_continuous(trans = log10_trans()) + 
+  ggtitle('Price (log10) by Carat')
 
 ```
 
@@ -107,13 +130,14 @@ ggplot(aes(carat, price), data = diamonds) +
 ### Overplotting Revisited
 
 ```{r Sort and Head Tables}
-
+head(sort(table(diamonds$carat), decreasing = T))
+head(sort(table(diamonds$price), decreasing = T))
 ```
 
 
 ```{r Overplotting Revisited}
 ggplot(aes(carat, price), data = diamonds) + 
-  geom_point() + 
+  geom_point(alpha = 1/2, size = 3/4, position = 'jitter') + 
   scale_x_continuous(trans = cuberoot_trans(), limits = c(0.2, 3),
                      breaks = c(0.2, 0.5, 1, 2, 3)) + 
   scale_y_continuous(trans = log10_trans(), limits = c(350, 15000),
@@ -185,13 +209,25 @@ Alter the code below.
 ggplot(aes(x = carat, y = price, color = cut), data = diamonds) + 
   geom_point(alpha = 0.5, size = 1, position = 'jitter') +
   scale_color_brewer(type = 'div',
-                     guide = guide_legend(title = Cut, reverse = T,
+                     guide = guide_legend(title = 'Cut', reverse = T,
                                           override.aes = list(alpha = 1, size = 2))) +  
   scale_x_continuous(trans = cuberoot_trans(), limits = c(0.2, 3),
                      breaks = c(0.2, 0.5, 1, 2, 3)) + 
   scale_y_continuous(trans = log10_trans(), limits = c(350, 15000),
                      breaks = c(350, 1000, 5000, 10000, 15000)) +
   ggtitle('Price (log10) by Cube-Root of Carat and Cut')
+
+ggplot(aes(x = carat, y = price, color = color), data = diamonds) + 
+  geom_point(alpha = 0.5, size = 1, position = 'jitter') +
+  scale_color_brewer(type = 'div',
+                     guide = guide_legend(title = 'Color',
+                                          override.aes = list(alpha = 1, size = 2))) +  
+  scale_x_continuous(trans = cuberoot_trans(), limits = c(0.2, 3),
+                     breaks = c(0.2, 0.5, 1, 2, 3)) + 
+  scale_y_continuous(trans = log10_trans(), limits = c(350, 15000),
+                     breaks = c(350, 1000, 5000, 10000, 15000)) +
+  ggtitle('Price (log10) by Cube-Root of Carat and Color')
+
 ```
 
 ***
@@ -256,6 +292,16 @@ https://github.com/solomonm/diamonds-data
 Notes:
 
 ```{r Building a Model Using the Big Diamonds Data Set}
+setwd('/Users/agibbs/code/Udacity/Exploratory Data Analysis/lesson6')
+getwd()
+diamondsBigSample = read.csv("diamondsbig.csv")
+
+m1 <- lm(I(log(price)) ~ I(carat^(1/3)), data = diamondsBigSample)
+m2 <- update(m1, ~ . + carat)
+m3 <- update(m2, ~ . + cut)
+m4 <- update(m3, ~ . + color)
+m5 <- update(m4, ~ . + clarity)
+mtable(m1, m2, m3, m4, m5)
 
 ```
 

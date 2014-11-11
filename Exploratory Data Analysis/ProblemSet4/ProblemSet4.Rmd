@@ -116,6 +116,8 @@ grid.arrange(cl, co, cu, ncol=1)
 ###Gapminder Data exploring Breast Cancer Mortality, Incidence and health care spending
 
 ```{r}
+library(gridExtra)
+
 #read in data on Breast Cancer Mortality
 BCm = read.csv('BreastCancerMortaility.csv', na.strings='NA', header = T, row.names=1, blank.lines.skip=T)
 
